@@ -1,0 +1,1875 @@
+{
+  "id": null,
+  "uid": "nas-host-metrics",
+  "title": "Metrics",
+  "description": "VictoriaMetrics; Host & Docker",
+  "schemaVersion": 39,
+  "version": 6,
+  "editable": true,
+  "tags": [
+    "nas",
+    "metrics",
+    "vps",
+    "docker"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Container STATS",
+      "type": "link",
+      "url": "/d/nas-container-stats",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Disks",
+      "type": "link",
+      "url": "/d/nas-disks",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Container LOGS",
+      "type": "link",
+      "url": "/d/nas-container-logs",
+      "includeVars": true,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(up{job=~\"node|cadvisor\"}, host)",
+        "definition": "label_values(up{job=~\"node|cadvisor\"}, host)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "compose_project",
+        "label": "Compose project",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_cpu_usage_seconds_total{host=~\"$host\"}, compose_project)",
+        "definition": "label_values(container_cpu_usage_seconds_total{host=~\"$host\"}, compose_project)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "compose_service",
+        "label": "Compose service",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\"}, compose_service)",
+        "definition": "label_values(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\"}, compose_service)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Host CPU (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - avg by (host) (rate(node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"}[$__rate_interval])))",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Host RAM (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node\",host=~\"$host\"} / node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"})",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Rendszerlemez foglaltság (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{job=\"node\",host=~\"$host\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{job=\"node\",host=~\"$host\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Uptime",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - node_boot_time_seconds{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Host CPU (%)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - avg by (host) (rate(node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"}[$__rate_interval])))",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Host RAM – használt / összes",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"} - node_memory_MemAvailable_bytes{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} használt",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} összes",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Host swap (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (node_memory_SwapTotal_bytes{job=\"node\",host=~\"$host\"} - node_memory_SwapFree_bytes{job=\"node\",host=~\"$host\"}) / clamp_min(node_memory_SwapTotal_bytes{job=\"node\",host=~\"$host\"}, 1)",
+          "legendFormat": "{{host}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "max": 100,
+          "decimals": 1,
+          "noValue": "Nincs adat"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "description": "A használt swap aránya hostonként. Kikapcsolt swapnál 0%; hiányzó mérésnél nincs adat. A swap külön erőforrás, nem fizikai RAM."
+    },
+    {
+      "id": 18,
+      "title": "Host swap – használt / szabad / összes",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(node_memory_SwapTotal_bytes{job=\"node\",host=~\"$host\"} - node_memory_SwapFree_bytes{job=\"node\",host=~\"$host\"})",
+          "legendFormat": "{{host}} használt",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "node_memory_SwapFree_bytes{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} szabad",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "node_memory_SwapTotal_bytes{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} összes",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "A meminfo collector SwapTotal és SwapFree gauge-jaiból. Használt = összes − szabad; a méret a host konfigurációját követi. A vonalak nincsenek összeadva, mert a használt + szabad már kiadja az összeset."
+    },
+    {
+      "id": 7,
+      "title": "Load / CPU-mag",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_load1{job=\"node\",host=~\"$host\"} / on (host) count by (host) (node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"})",
+          "legendFormat": "{{host}} / load1",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "node_load5{job=\"node\",host=~\"$host\"} / on (host) count by (host) (node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"})",
+          "legendFormat": "{{host}} / load5",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "node_load15{job=\"node\",host=~\"$host\"} / on (host) count by (host) (node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"})",
+          "legendFormat": "{{host}} / load15",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "Az 1, 5 és 15 perces Linux load average osztva az adott host logikai CPU-magjainak számával. Az 1-es érték a CPU-magok számával egyező loadot jelent. Nincs felső korlát: például 8 mag és 64-es load esetén az érték 8. Nem CPU-százalék; I/O-ra váró feladatokat is tartalmaz."
+    },
+    {
+      "id": 8,
+      "title": "Host hálózati forgalom",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(node_network_receive_bytes_total{job=\"node\",host=~\"$host\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / {{device}} be",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "rate(node_network_transmit_bytes_total{job=\"node\",host=~\"$host\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / {{device}} ki",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Lemez I/O",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(node_disk_read_bytes_total{job=\"node\",host=~\"$host\",device!~\"^(loop|ram|fd).*\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / {{device}} olvasás",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "rate(node_disk_written_bytes_total{job=\"node\",host=~\"$host\",device!~\"^(loop|ram|fd).*\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / {{device}} írás",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Gyűjtők elérhetősége",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_replace((max by (host) (up{host=~\"$host\",job=\"node\"}) or on (host) (0 * max by (host) (up{host=~\"$host\",job=~\"node|cadvisor\"}))), \"collector\", \"node\", \"\", \"\") or label_replace((2 + (max by (host) (up{host=~\"$host\",job=\"cadvisor\"}) or on (host) (0 * max by (host) (up{host=~\"$host\",job=~\"node|cadvisor\"})))), \"collector\", \"cadvisor\", \"\", \"\")",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 3,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "node",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "node",
+                  "color": "green"
+                },
+                "2": {
+                  "text": "cadvisor",
+                  "color": "red"
+                },
+                "3": {
+                  "text": "cadvisor",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "noValue": "—",
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-text"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "collector\\host"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "lg"
+      },
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "host"
+              }
+            ]
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "host",
+            "rowField": "collector",
+            "valueField": "Value"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "collector\\host",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Hostonként egy oszlop, felül node, alul cadvisor. Zöld: elérhető; piros: sikertelen vagy hiányzó gyűjtő. Az időtartomány végének állapota. Ha az Alloy egésze leáll, az idősorok eltűnnek; a No data nem jelent elérhető állapotot."
+    },
+    {
+      "id": 11,
+      "title": "Konténer CPU – használt magok",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (host,compose_project,compose_service,container) (rate(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}[$__rate_interval]))",
+          "legendFormat": "{{host}} / {{compose_project}} / {{compose_service}} / {{container}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(sum by (host,compose_project,compose_service,container) (rate(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}[$__rate_interval])))",
+          "legendFormat": "Összesen",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 70,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "1 = egy teljes logikai CPU-mag. Több magot használó konténer értéke 1 fölé mehet. A területek a szűrőkkel kiválasztott konténerek értékeit adják össze, több host kiválasztásakor azok közös összegét. Az Összesen vonal nincs a halmozásba beleszámítva."
+    },
+    {
+      "id": 12,
+      "title": "Konténer RAM – working set",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"})",
+          "legendFormat": "{{host}} / {{compose_project}} / {{compose_service}} / {{container}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(sum by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}))",
+          "legendFormat": "Összesen",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 70,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "Working set, nem a konténer teljes lefoglalt/cached memóriája. A területek a szűrőkkel kiválasztott konténerek értékeit adják össze, több host kiválasztásakor azok közös összegét. Az Összesen vonal nincs a halmozásba beleszámítva."
+    },
+    {
+      "id": 13,
+      "title": "Load average – 1 / 5 / 15 perc",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_load1{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} / load1",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "node_load5{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} / load5",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "node_load15{job=\"node\",host=~\"$host\"}",
+          "legendFormat": "{{host}} / load15",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "Az eredeti Linux load1, load5 és load15 érték. CPU-ra és megszakíthatatlan I/O-ra váró feladatok átlaga; nem CPU-utilization."
+    },
+    {
+      "id": 14,
+      "title": "Konténer CPU – kapacitás (%)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (sum by (host,compose_project,compose_service,container) (rate(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}[$__rate_interval]))) / scalar(count(node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"}))",
+          "legendFormat": "{{host}} / {{compose_project}} / {{compose_service}} / {{container}}",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(100 * (sum by (host,compose_project,compose_service,container) (rate(container_cpu_usage_seconds_total{host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}[$__rate_interval]))) / scalar(count(node_cpu_seconds_total{job=\"node\",host=~\"$host\",mode=\"idle\"})))",
+          "legendFormat": "Összesen",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 70,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisSoftMax": 100
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "A kiválasztott konténerek CPU-használata a kiválasztott hostok összes logikai CPU-magjának kapacitásához képest. Egy 2 magos hoston 0,5 mag = 25%, 2 mag = 100%. Több hostnál a közös kapacitás a nevező; a Compose-szűrők csak a kijelzett konténereket szűkítik. Az Összesen vonal nincs a halmozásba beleszámítva."
+    },
+    {
+      "id": 15,
+      "title": "CPU pressure – some (%)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 47,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * rate(node_pressure_cpu_waiting_seconds_total{job=\"node\",host=~\"$host\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / some",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisSoftMax": 100
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "A lekérdezési ablakban eltelt idő hány százalékában várt legalább egy feladat CPU-ra. PSI some pressure; nem CPU- vagy lemezkihasználtság. Az Alloy pressure collectorát és működő /proc/pressure/cpu kernelinterfészt igényel. Hiányzó adat nem jelent 0%-ot. rate() a total counterből, nem a kernel avg10/avg60/avg300 mezői."
+    },
+    {
+      "id": 16,
+      "title": "I/O pressure – some (%)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 47,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * rate(node_pressure_io_waiting_seconds_total{job=\"node\",host=~\"$host\"}[$__rate_interval])",
+          "legendFormat": "{{host}} / some",
+          "editorMode": "code",
+          "range": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisSoftMax": 100
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "description": "A lekérdezési ablakban eltelt idő hány százalékában várt legalább egy feladat I/O-ra. PSI some pressure; nem CPU- vagy lemezkihasználtság. Az Alloy pressure collectorát és működő /proc/pressure/io kernelinterfészt igényel. Hiányzó adat nem jelent 0%-ot. rate() a total counterből, nem a kernel avg10/avg60/avg300 mezői."
+    }
+  ]
+}

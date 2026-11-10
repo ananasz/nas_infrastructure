@@ -1,0 +1,82 @@
+name: cetli
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  cetli-db:
+    image: couchdb:3
+    container_name: cetli-db
+    ports:
+      - "${FAUXTON_EXPOSE:-127.0.0.1:5984}:5984"
+    environment:
+      - COUCHDB_USER=${DB_USER}
+      - COUCHDB_PASSWORD=${DB_PASS}
+    volumes:
+      - cetli-db-data:/opt/couchdb/data
+    networks:
+      - cetli
+    restart: always
+    logging: *logging
+
+  cetli-backend:
+    image: docker.ananasz.hu/cetli-backend:${CETLI_BACKEND_TAG:-latest}
+    container_name: cetli-backend
+    environment:
+      - COUCHDB_URL=${DB_URL}
+      - COUCHDB_ADMIN_USER=${DB_USER}
+      - COUCHDB_ADMIN_PASSWORD=${DB_PASS}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - PORT=3000
+      - NODE_ENV=production
+      - COOKIE_SAME_SITE=none
+      - FRONTEND_URL=${FRONTEND_URL:-}
+      - OIDC_DIAGNOSTICS=${OIDC_DIAGNOSTICS:-0}
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL:-}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
+      - OIDC_LOGOUT_REDIRECT_URI=${OIDC_LOGOUT_REDIRECT_URI:-}
+      - OIDC_SCOPES=${OIDC_SCOPES:-openid profile email groups}
+      - OIDC_GROUPS_CLAIM=${OIDC_GROUPS_CLAIM:-groups}
+      - OIDC_REQUIRED_GROUP=${OIDC_REQUIRED_GROUP:-access_cetli}
+      - OIDC_POST_LOGIN_REDIRECT_URI=${OIDC_POST_LOGIN_REDIRECT_URI:-/home}
+      - OIDC_ALLOWED_FRONTEND_ORIGINS=${OIDC_ALLOWED_FRONTEND_ORIGINS:-http://localhost:8081}
+    secrets:
+      - cookie_secret
+      - oidc_client_secret
+    depends_on:
+      - cetli-db
+    networks:
+      - cetli
+      - nas-bridge
+    restart: unless-stopped
+    logging: *logging
+
+  cetli-frontend:
+    image: docker.ananasz.hu/cetli-frontend:${CETLI_FRONTEND_TAG:-latest}
+    container_name: cetli-frontend
+    networks:
+      - nas-bridge
+    restart: unless-stopped
+    logging: *logging
+
+networks:
+  cetli:
+    name: cetli
+    driver: bridge
+  nas-bridge:
+    external: true
+
+volumes:
+  # Created by the former /opt/cetli project; keep the name.
+  cetli-db-data:
+    external: true
+    name: cetli_cetli-db-data
+
+# Values come from cetli/.env; the backend still reads /run/secrets/NAME.
+secrets:
+  cookie_secret:
+    environment: COOKIE_SECRET
+  oidc_client_secret:
+    environment: OIDC_CLIENT_SECRET

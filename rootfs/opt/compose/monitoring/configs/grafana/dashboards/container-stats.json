@@ -1,0 +1,497 @@
+{
+  "id": null,
+  "uid": "nas-container-stats",
+  "title": "Container STATS",
+  "description": "Konténerenkénti erőforrás-táblázat a meglévő cAdvisor metrikákból. CPU%: 100% = egy teljes CPU-mag.",
+  "schemaVersion": 39,
+  "version": 2,
+  "editable": true,
+  "tags": [
+    "nas",
+    "metrics",
+    "docker"
+  ],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Metrics",
+      "type": "link",
+      "url": "/d/nas-host-metrics",
+      "targetBlank": false,
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_last_seen{job=\"cadvisor\",container!=\"\"}, host)",
+        "definition": "label_values(container_last_seen{job=\"cadvisor\",container!=\"\"}, host)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "compose_project",
+        "label": "Compose project",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",container!=\"\"}, compose_project)",
+        "definition": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",container!=\"\"}, compose_project)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "compose_service",
+        "label": "Compose service",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",container!=\"\"}, compose_service)",
+        "definition": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",container!=\"\"}, compose_service)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "container",
+        "label": "Container",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}, container)",
+        "definition": "label_values(container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container!=\"\"}, container)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "window",
+        "label": "CPU / I/O átlag",
+        "type": "custom",
+        "query": "1m,5m",
+        "current": {
+          "text": "1m",
+          "value": "1m"
+        },
+        "options": [
+          {
+            "text": "1m",
+            "value": "1m",
+            "selected": true
+          },
+          {
+            "text": "5m",
+            "value": "5m",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false,
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Használat",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**CPU: 100% = egy mag**, több magnál 100% fölé mehet. **RAM:** working set; **Net / lemez I/O:** B/s. A tábla az időtartomány végének állapotát mutatja; a CPU / I/O átlag alapból 1 perc. Oszlopfejlécre kattintva rendezz. **— = nincs mérés vagy nem alkalmazható**, nem nulla. A PIDs gyűjtése nincs bekapcsolva."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Konténer erőforrások",
+      "type": "table",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 24,
+        "h": 18
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_replace(((time() - max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"})) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"age_s\", \"\", \"\") or label_replace(((100 * sum by (host,compose_project,compose_service,container) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}[$window]))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"cpu_pct\", \"\", \"\") or label_replace(((max by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"})) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"ram_bytes\", \"\", \"\") or label_replace(((((max by (host,compose_project,compose_service,container) (container_spec_memory_limit_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > 0) < on (host) group_left() (max by (host) (node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"}))) or on (host,compose_project,compose_service,container) (0 * (max by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"})) + on (host) group_left() (max by (host) (node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"})))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"limit_bytes\", \"\", \"\") or label_replace(((100 * (max by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"})) / on (host,compose_project,compose_service,container) (((max by (host,compose_project,compose_service,container) (container_spec_memory_limit_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > 0) < on (host) group_left() (max by (host) (node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"}))) or on (host,compose_project,compose_service,container) (0 * (max by (host,compose_project,compose_service,container) (container_memory_working_set_bytes{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"})) + on (host) group_left() (max by (host) (node_memory_MemTotal_bytes{job=\"node\",host=~\"$host\"}))))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"mem_pct\", \"\", \"\") or label_replace(((sum by (host,compose_project,compose_service,container) (rate(container_network_receive_bytes_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\",interface!=\"lo\"}[$window]))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"net_rx_bps\", \"\", \"\") or label_replace(((sum by (host,compose_project,compose_service,container) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\",interface!=\"lo\"}[$window]))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"net_tx_bps\", \"\", \"\") or label_replace(((sum by (host,compose_project,compose_service,container) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}[$window]))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"read_bps\", \"\", \"\") or label_replace(((sum by (host,compose_project,compose_service,container) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}[$window]))) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"write_bps\", \"\", \"\") or label_replace(((100 * (sum by (host,compose_project,compose_service,container) (rate(container_cpu_cfs_throttled_periods_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}[$window]))) / on (host,compose_project,compose_service,container) (sum by (host,compose_project,compose_service,container) (rate(container_cpu_cfs_periods_total{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}[$window])) > 0)) and on (host,compose_project,compose_service,container) (max by (host,compose_project,compose_service,container) (container_last_seen{job=\"cadvisor\",host=~\"$host\",compose_project=~\"$compose_project\",compose_service=~\"$compose_service\",container=~\"$container\",container!=\"\"}) > (time() - 60))), \"stat\", \"throttle_pct\", \"\", \"\")",
+          "editorMode": "code",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "valueLabel": "stat"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "host": 0,
+              "compose_project": 1,
+              "compose_service": 2,
+              "container": 3,
+              "cpu_pct": 4,
+              "ram_bytes": 5,
+              "limit_bytes": 6,
+              "mem_pct": 7,
+              "net_rx_bps": 8,
+              "net_tx_bps": 9,
+              "read_bps": 10,
+              "write_bps": 11,
+              "throttle_pct": 12,
+              "age_s": 13
+            },
+            "renameByName": {
+              "host": "Host",
+              "compose_project": "Projekt",
+              "compose_service": "Service",
+              "container": "Konténer",
+              "cpu_pct": "CPU %",
+              "ram_bytes": "RAM",
+              "limit_bytes": "RAM limit",
+              "mem_pct": "RAM %",
+              "net_rx_bps": "Net be/s",
+              "net_tx_bps": "Net ki/s",
+              "read_bps": "Lemez olvasás/s",
+              "write_bps": "Lemez írás/s",
+              "throttle_pct": "CPU throttling %",
+              "age_s": "Adatkor"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "CPU %",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "decimals": 1,
+          "noValue": "—",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "minWidth": 80,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Projekt"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Konténer"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM limit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net be/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net ki/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lemez olvasás/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lemez írás/s"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU throttling %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Adatkor"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "enablePagination": true,
+        "sortBy": [
+          {
+            "displayName": "CPU %",
+            "desc": true
+          }
+        ],
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false
+        }
+      },
+      "description": "CPU szerinti alap rendezés. Host és konténer szerint elkülönített sorok; Compose-címkék a szűréshez. Csak 60 másodpercnél frissebb container_last_seen adatok. A RAM limit a konténerlimit és a host RAM kisebbike, limit hiányában host RAM. Throttling: a korlátozott CPU-periodusok aránya, kvóta nélkül hiányozhat. Host networknél a forgalom közös lehet. A forgalmi ráták az átlagablakra, nem az indulás óta eltelt teljes időre vonatkoznak."
+    }
+  ]
+}

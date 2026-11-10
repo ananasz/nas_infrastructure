@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew TLS certificates and reload nginx after configuration validation
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/compose/base
+ExecStart=/bin/sh /opt/compose/base/scripts/renew-certificates.sh --renew

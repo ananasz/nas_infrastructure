@@ -1,0 +1,921 @@
+{
+  "id": null,
+  "uid": "nas-disks",
+  "title": "Disks",
+  "description": "SMART (smartctl-exporter), ZFS és fájlrendszerek.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "tags": [
+    "nas"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Metrics",
+      "type": "link",
+      "url": "/d/nas-host-metrics",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Container STATS",
+      "type": "link",
+      "url": "/d/nas-container-stats",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Container LOGS",
+      "type": "link",
+      "url": "/d/nas-container-logs",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "device",
+        "label": "Eszköz",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "nas-metrics"
+        },
+        "query": "label_values(smartctl_device, device)",
+        "definition": "label_values(smartctl_device, device)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "table",
+      "title": "Lemezek",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "description": "SMART-összesítés lemezenként. A hibaszámlálók a lenti táblákban.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (device, model_name, serial_number) (smartctl_device{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "B",
+          "expr": "max by (device) (smartctl_device_smart_status{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "C",
+          "expr": "max by (device) (smartctl_device_temperature{device=~\"$device\",temperature_type=\"current\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "D",
+          "expr": "max by (device) (smartctl_device_power_on_seconds{device=~\"$device\"}) / 3600",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "E",
+          "expr": "max by (device) (smartctl_device_capacity_bytes{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "device",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Value #A": true
+            },
+            "renameByName": {
+              "device": "Eszköz",
+              "model_name": "Modell",
+              "serial_number": "Sorozatszám",
+              "Value #B": "SMART állapot",
+              "Value #C": "Hőmérséklet",
+              "Value #D": "Bekapcsolt órák",
+              "Value #E": "Kapacitás"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SMART állapot"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "PASSED",
+                        "color": "green"
+                      },
+                      "0": {
+                        "text": "FAILED",
+                        "color": "red"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hőmérséklet"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 45
+                    },
+                    {
+                      "color": "red",
+                      "value": 55
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bekapcsolt órák"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Kapacitás"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Eszköz"
+          }
+        ]
+      },
+      "id": 1
+    },
+    {
+      "type": "table",
+      "title": "Kritikus SMART-számlálók (raw)",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 14,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "description": "ATA-lemezek hibaszámlálói. Nem nulla, főleg növekvő érték esetén készülj a cserére.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (device, attribute_name) (smartctl_device_attribute{device=~\"$device\",attribute_value_type=\"raw\",attribute_name=~\"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable|Reported_Uncorrect|UDMA_CRC_Error_Count|Reallocated_Event_Count\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "attribute_name",
+            "rowField": "device",
+            "valueField": "Value"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {
+            "cellOptions": {
+              "type": "color-text"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "device\\attribute_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Eszköz"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 2
+    },
+    {
+      "type": "table",
+      "title": "Hibanaplók / NVMe",
+      "gridPos": {
+        "x": 14,
+        "y": 7,
+        "w": 10,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (device) (smartctl_device_error_log_count{device=~\"$device\",error_log_type=\"summary\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "B",
+          "expr": "max by (device) (smartctl_device_self_test_log_error_count{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "C",
+          "expr": "max by (device) (smartctl_device_media_errors{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "D",
+          "expr": "max by (device) (smartctl_device_percentage_used{device=~\"$device\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "device",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true
+            },
+            "renameByName": {
+              "device": "Eszköz",
+              "Value #A": "Hibanapló",
+              "Value #B": "Self-test hiba",
+              "Value #C": "NVMe médiahiba",
+              "Value #D": "NVMe elhasználtság %"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {
+            "cellOptions": {
+              "type": "color-text"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NVMe elhasználtság %"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Eszköz"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 3
+    },
+    {
+      "type": "timeseries",
+      "title": "Lemezhőmérséklet",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (device) (smartctl_device_temperature{device=~\"$device\",temperature_type=\"current\"})",
+          "legendFormat": "{{device}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 45
+              },
+              {
+                "color": "red",
+                "value": 55
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 4
+    },
+    {
+      "type": "timeseries",
+      "title": "Hibás szektorok alakulása",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (device, attribute_name) (smartctl_device_attribute{device=~\"$device\",attribute_value_type=\"raw\",attribute_name=~\"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable\"})",
+          "legendFormat": "{{device}} {{attribute_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 5
+    },
+    {
+      "type": "table",
+      "title": "ZFS pool állapot",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "description": "node_exporter zfs collector (/proc/spl/kstat/zfs/POOL/state).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max by (zpool, state) (node_zfs_zpool_state{job=\"node\"}) == 1",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            },
+            "renameByName": {
+              "zpool": "Pool",
+              "state": "Állapot"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Állapot"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "online": {
+                        "color": "green"
+                      }
+                    }
+                  },
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": ".*",
+                      "result": {
+                        "color": "red"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 6
+    },
+    {
+      "type": "bargauge",
+      "title": "Fájlrendszerek foglaltsága",
+      "gridPos": {
+        "x": 8,
+        "y": 23,
+        "w": 16,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "100 * (1 - max by (mountpoint) (node_filesystem_avail_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}) / max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}))",
+          "legendFormat": "{{mountpoint}}",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 7
+    },
+    {
+      "type": "timeseries",
+      "title": "Lemez I/O (olvasás + / írás −)",
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "sum by (device) (rate(node_disk_read_bytes_total{job=\"node\",device=~\"$device\"}[$__rate_interval]))",
+          "legendFormat": "{{device}} olvasás"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "B",
+          "expr": "-sum by (device) (rate(node_disk_written_bytes_total{job=\"node\",device=~\"$device\"}[$__rate_interval]))",
+          "legendFormat": "{{device}} írás"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 8
+    },
+    {
+      "type": "stat",
+      "title": "SMART-gyűjtő",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nas-metrics"
+      },
+      "description": "DOWN: az Alloy nem éri el a smartctl-exportert.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "A",
+          "expr": "max(up{job=\"smartctl\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "nincs adat",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "OK",
+                  "color": "green"
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 9
+    }
+  ]
+}

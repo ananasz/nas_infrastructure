@@ -1,0 +1,159 @@
+name: monitoring
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoriametrics
+    restart: unless-stopped
+    command:
+      - -storageDataPath=/storage
+      - -retentionPeriod=${METRICS_RETENTION:-180d}
+      - -httpListenAddr=:8428
+      - -memory.allowedPercent=30
+    # Alloy runs in the host network and writes here over loopback.
+    ports:
+      - 127.0.0.1:8428:8428
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    volumes:
+      - metrics-data:/storage
+    logging: *logging
+
+  loki:
+    image: grafana/loki
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    ports:
+      - 127.0.0.1:3100:3100
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    volumes:
+      - ./configs/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    logging: *logging
+    labels:
+      logging.collect: "false" # Avoid sending ingestion/query diagnostics back to Loki.
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - loki
+      - victoriametrics
+    environment:
+      GF_LOG_MODE: console
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set a unique Grafana admin password in .env}
+      GF_SERVER_ROOT_URL: http://grafana.nas/
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./configs/grafana/dashboards:/etc/grafana/dashboards:ro
+    networks:
+      - default
+      - nas-bridge
+    logging: *logging
+
+  alloy:
+    image: grafana/alloy:v1.20.1
+    container_name: alloy
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ALLOY_HOST: nas
+    depends_on:
+      - loki
+      - victoriametrics
+      - cadvisor
+      - smartctl-exporter
+    command:
+      - run
+      - --server.http.listen-addr=127.0.0.1:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    stop_grace_period: 30s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    read_only: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./configs/alloy.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+    logging: *logging
+    labels:
+      logging.collect: 'false'
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.60.6
+    container_name: cadvisor
+    restart: unless-stopped
+    cgroup: host
+    network_mode: host
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    command:
+      - --listen_ip=127.0.0.1
+      - --port=18080
+      - --docker_only=true
+      - --disable_root_cgroup_stats=true
+      - --housekeeping_interval=15s
+      - --max_housekeeping_interval=15s
+      - --allow_dynamic_housekeeping=false
+      - --storage_duration=2m
+      - --enable_metrics=cpu,memory,network,diskIO
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.project,com.docker.compose.service
+      - --logtostderr=true
+    healthcheck:
+      test: [CMD, wget, --quiet, --tries=1, --spider, http://127.0.0.1:18080/healthz]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /proc:/rootfs/proc:ro
+      - /etc/machine-id:/rootfs/etc/machine-id:ro
+      - ${DOCKER_DATA_ROOT:-/var/lib/docker}:/rootfs${DOCKER_DATA_ROOT:-/var/lib/docker}:ro
+    logging: *logging
+
+  # SMART data of every disk; raw ATA/NVMe commands need a privileged container.
+  smartctl-exporter:
+    image: prometheuscommunity/smartctl-exporter:latest
+    container_name: smartctl-exporter
+    restart: unless-stopped
+    privileged: true
+    user: root
+    network_mode: host
+    command:
+      - --web.listen-address=127.0.0.1:9633
+    logging: *logging
+
+volumes:
+  metrics-data:
+    name: metrics-data
+  loki-data:
+    name: loki-data
+  grafana-data:
+    name: grafana-data
+  alloy-data:
+    name: alloy-data
+
+networks:
+  nas-bridge:
+    external: true

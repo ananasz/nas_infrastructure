@@ -1,0 +1,193 @@
+{
+  "id": null,
+  "uid": "nas-container-logs",
+  "title": "Container LOGS",
+  "description": "Konténerlogok (Alloy -> Loki). A keresés kis- és nagybetűre nem érzékeny regex.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "tags": [
+    "nas"
+  ],
+  "timezone": "browser",
+  "refresh": "",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Metrics",
+      "type": "link",
+      "url": "/d/nas-host-metrics",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Container STATS",
+      "type": "link",
+      "url": "/d/nas-container-stats",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    },
+    {
+      "title": "Disks",
+      "type": "link",
+      "url": "/d/nas-disks",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "compose_project",
+        "label": "Compose projekt",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "nas-loki"
+        },
+        "query": "label_values({host=\"nas\"}, compose_project)",
+        "definition": "label_values({host=\"nas\"}, compose_project)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "container",
+        "label": "Konténer",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "nas-loki"
+        },
+        "query": "label_values({host=\"nas\", compose_project=~\"$compose_project\"}, container)",
+        "definition": "label_values({host=\"nas\", compose_project=~\"$compose_project\"}, container)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "search",
+        "label": "Keresés",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Logmennyiség konténerenként",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 6
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "nas-loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nas-loki"
+          },
+          "refId": "A",
+          "queryType": "range",
+          "legendFormat": "{{container}}",
+          "expr": "sum by (container) (count_over_time({host=\"nas\", compose_project=~\"$compose_project\", container=~\"$container\"} |~ \"(?i)$search\" [$__auto]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "stacking": {
+              "mode": "normal"
+            },
+            "fillOpacity": 80
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 1
+    },
+    {
+      "type": "logs",
+      "title": "Naplók",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 22
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "nas-loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nas-loki"
+          },
+          "refId": "A",
+          "queryType": "range",
+          "expr": "{host=\"nas\", compose_project=~\"$compose_project\", container=~\"$container\"} |~ \"(?i)$search\""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      },
+      "id": 2
+    }
+  ]
+}

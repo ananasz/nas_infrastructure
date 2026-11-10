@@ -1,0 +1,155 @@
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// ---- Container logs -> Loki ----
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "10s"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  // Collect by default; the label logging.collect=false excludes a container.
+  rule {
+    source_labels = ["__meta_docker_container_label_logging_collect"]
+    regex         = "false"
+    action        = "drop"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+}
+
+loki.source.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.containers.output
+  refresh_interval = "10s"
+  forward_to       = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://127.0.0.1:3100/loki/api/v1/push"
+  }
+
+  external_labels = {
+    job  = "docker",
+    host = sys.env("ALLOY_HOST"),
+  }
+}
+
+// ---- Host metrics (node exporter defaults, including zfs and hwmon) ----
+
+prometheus.exporter.unix "host" {
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+  rootfs_path = "/host/root"
+
+  filesystem {
+    fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|efivarfs|fusectl|hugetlbfs|mqueue|nsfs|overlay|proc|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|tmpfs)$"
+    mount_points_exclude = "^/(dev|proc|sys|run|var/lib/docker|var/lib/containers)($|/)"
+  }
+
+  netdev {
+    device_exclude = "^(veth.*|docker.*|br-.*|lo)$"
+  }
+}
+
+discovery.relabel "host_metrics" {
+  targets = prometheus.exporter.unix.host.targets
+
+  rule {
+    target_label = "job"
+    replacement  = "node"
+  }
+
+  rule {
+    target_label = "instance"
+    replacement  = sys.env("ALLOY_HOST")
+  }
+}
+
+prometheus.scrape "host" {
+  targets         = discovery.relabel.host_metrics.output
+  job_name        = "node"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.local.receiver]
+}
+
+// ---- Container metrics (cAdvisor) ----
+
+prometheus.scrape "containers" {
+  targets = [{
+    __address__ = "127.0.0.1:18080",
+    instance    = sys.env("ALLOY_HOST"),
+  }]
+  job_name        = "cadvisor"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.relabel.container_metrics.receiver]
+}
+
+prometheus.relabel "container_metrics" {
+  forward_to = [prometheus.remote_write.local.receiver]
+
+  rule {
+    source_labels = ["container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+
+  rule {
+    source_labels = ["container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+
+  rule {
+    source_labels = ["name"]
+    regex         = "/?(.*)"
+    target_label  = "container"
+    replacement   = "$1"
+  }
+
+  rule {
+    action = "labeldrop"
+    regex  = "container_label_.*|id|image|name"
+  }
+}
+
+// ---- Disk SMART data ----
+
+prometheus.scrape "smart" {
+  targets = [{
+    __address__ = "127.0.0.1:9633",
+    instance    = sys.env("ALLOY_HOST"),
+  }]
+  job_name        = "smartctl"
+  scrape_interval = "60s"
+  scrape_timeout  = "30s"
+  forward_to      = [prometheus.remote_write.local.receiver]
+}
+
+prometheus.remote_write "local" {
+  external_labels = { host = sys.env("ALLOY_HOST") }
+
+  endpoint {
+    url = "http://127.0.0.1:8428/api/v1/write"
+  }
+}

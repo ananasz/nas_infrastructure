@@ -1,0 +1,70 @@
+name: registry
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  registry:
+    image: registry:3
+    container_name: registry
+    restart: always
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: 'true'
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      - default
+      - nas-bridge
+    logging: *logging
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    restart: always
+    depends_on:
+      - registry
+    environment:
+      SINGLE_REGISTRY: 'true'
+      REGISTRY_TITLE: NAS Docker Registry
+      DELETE_IMAGES: 'true'
+      SHOW_CONTENT_DIGEST: 'true'
+      NGINX_PROXY_PASS_URL: http://registry:5000
+      SHOW_CATALOG_NB_TAGS: 'true'
+      CATALOG_MIN_BRANCHES: '1'
+      CATALOG_MAX_BRANCHES: '1'
+      TAGLIST_PAGE_SIZE: '100'
+      REGISTRY_SECURED: 'false'
+      CATALOG_ELEMENTS_LIMIT: '1000'
+      NGINX_PROXY_HEADER_Host: $$http_host
+      NGINX_LISTEN_PORT: '80'
+    networks:
+      - default
+      - nas-bridge
+    logging: *logging
+  retention:
+    image: python:3.14-alpine
+    profiles: [maintenance]
+    user: "65534:65534"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint: [python, -B, /app/retention.py]
+    volumes:
+      - ./scripts/retention.py:/app/retention.py:ro
+    logging: *logging
+  gc:
+    image: registry:3
+    profiles: [maintenance]
+    command: [garbage-collect, /etc/distribution/config.yml]
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: 'true'
+    volumes:
+      - registry-data:/var/lib/registry
+    network_mode: none
+    logging: *logging
+volumes:
+  registry-data:
+    name: registry-data
+networks:
+  nas-bridge:
+    external: true

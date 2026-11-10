@@ -1,0 +1,8 @@
+[Unit]
+Description=Remove registry images beyond five builds and 30 days
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/compose/registry/scripts/maintenance.sh retention

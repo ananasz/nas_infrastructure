@@ -1,0 +1,72 @@
+name: base
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  nginx:
+    image: nginx:stable-trixie
+    container_name: nginx
+    restart: always
+    entrypoint:
+      - nginx
+    command:
+      - -g
+      - daemon off;
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/conf.d:/etc/nginx/conf.d:ro
+      - ./configs/snippets:/etc/nginx/snippets:ro
+      - certs:/etc/letsencrypt:ro
+      - acme-webroot:/var/www/certbot:ro
+      - nginx-served:/usr/share/nginx/served:ro
+    networks:
+      - nas-bridge
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+  certbot:
+    image: certbot/certbot:v5.8.0
+    profiles:
+      - maintenance
+    volumes:
+      - certs:/etc/letsencrypt
+      - acme-webroot:/var/www/certbot
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    command: ["--http-enabled"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - nas-bridge
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  certs:
+    external: true
+    name: certs
+  portainer-data:
+    external: true
+    name: portainer-data
+  acme-webroot: {}
+  # Static files on the ZFS pool; the path must not move.
+  nginx-served:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /nas-data/zfs-pool/nginx-served
+networks:
+  nas-bridge:
+    external: true

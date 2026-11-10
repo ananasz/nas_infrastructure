@@ -1,0 +1,27 @@
+name: verdaccio
+services:
+  verdaccio:
+    image: verdaccio/verdaccio
+    container_name: verdaccio
+    user: "1001:1001"
+    restart: always
+    environment:
+      - VERDACCIO_PORT=4873
+    volumes:
+      - verdaccio-conf:/verdaccio/conf
+      - verdaccio-storage:/verdaccio/storage
+      - verdaccio-plugins:/verdaccio/plugins
+    networks:
+      - nas-bridge
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '5'
+volumes:
+  verdaccio-conf: {external: true, name: verdaccio-conf}
+  verdaccio-storage: {external: true, name: verdaccio-storage}
+  verdaccio-plugins: {external: true, name: verdaccio-plugins}
+networks:
+  nas-bridge:
+    external: true

@@ -1,0 +1,38 @@
+# Helyi fejlesztői és agent-beállítások
+.idea/
+.vscode/
+[Aa][Gg][Ee][Nn][Tt][Ss].md
+.claude/
+.local/
+
+# Környezeti fájlok; csak kitöltetlen minták kerülhetnek gitbe
+.env
+.env.*
+*.env
+!.env.example
+
+# Titkok, kulcsok és futás közbeni adatok
+secrets/
+letsencrypt/
+users_database.yml
+*.key
+*.pem
+*.p12
+*.pfx
+*.htpasswd
+id_rsa*
+id_ed25519*
+*.secret
+*.log
+*.sqlite*
+*.bak
+__pycache__/
+
+# Helyi Ansible inventory
+ansible/inventory/hosts.yml
+*.retry
+
+# Szerveren keletkező állapot
+rootfs/var/
+rootfs/home/
+rootfs/root/

@@ -1,0 +1,54 @@
+name: auth
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: always
+    environment:
+      X_AUTHELIA_CONFIG_FILTERS: template
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_oidc_hmac_secret
+    volumes:
+      - ./configs/configuration.yml:/config/configuration.yml:ro
+      # SQLite DB, notifications and users_database.yml (password changes write it).
+      - authelia-data:/data
+    secrets:
+      - authelia_jwt_secret
+      - authelia_session_secret
+      - authelia_storage_encryption_key
+      - authelia_oidc_hmac_secret
+      - authelia_oidc_jwks_private_key
+      - authelia_cetli_client_secret_hash
+    networks:
+      - nas-bridge
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+# Values come from auth/.env; Compose writes them to /run/secrets/NAME.
+secrets:
+  authelia_jwt_secret:
+    environment: JWT_SECRET
+  authelia_session_secret:
+    environment: SESSION_SECRET
+  authelia_storage_encryption_key:
+    environment: STORAGE_ENCRYPTION_KEY
+  authelia_oidc_hmac_secret:
+    environment: OIDC_HMAC_SECRET
+  authelia_oidc_jwks_private_key:
+    environment: OIDC_JWKS_PRIVATE_KEY
+  authelia_cetli_client_secret_hash:
+    environment: CETLI_CLIENT_SECRET_HASH
+volumes:
+  authelia-data:
+    external: true
+    name: authelia-data
+networks:
+  nas-bridge:
+    external: true

@@ -1,0 +1,8 @@
+[Unit]
+Description=Reclaim unused registry storage
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/compose/registry/scripts/maintenance.sh gc
