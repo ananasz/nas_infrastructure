@@ -31,8 +31,9 @@ mappings=(
     'verdaccio-storage  /nas-data/container-data/verdaccio/storage'
     'verdaccio-plugins  /nas-data/container-data/verdaccio/plugins'
 )
-# Rebuilt by Jellyfin; created empty instead of copying /nas-data/cache/jellyfin.
+# Rebuilt by Jellyfin; created empty (owned by PUID:PGID) instead of copying /nas-data/cache/jellyfin.
 empty_volumes=(jellyfin-cache)
+empty_owner=1001:1001
 
 die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
@@ -76,6 +77,7 @@ for mapping in "${mappings[@]}"; do
 done
 for volume in "${empty_volumes[@]}"; do
     docker volume create "$volume" >/dev/null
+    docker run --rm -v "$volume:/dst" "$helper" chown "$empty_owner" /dst
 done
 
 # Ownership and modes are preserved by cp -a; a quick size comparison for review:

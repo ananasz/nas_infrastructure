@@ -69,6 +69,8 @@ services:
   alloy:
     image: grafana/alloy:v1.20.1
     container_name: alloy
+    # Root without capabilities still needs the image's alloy group (473) to reach /var/lib/alloy.
+    user: 0:473
     restart: unless-stopped
     network_mode: host
     environment:
@@ -129,6 +131,7 @@ services:
       - /sys:/sys:ro
       - /proc:/rootfs/proc:ro
       - /etc/machine-id:/rootfs/etc/machine-id:ro
+      - /etc/machine-id:/etc/machine-id:ro
       - ${DOCKER_DATA_ROOT:-/var/lib/docker}:/rootfs${DOCKER_DATA_ROOT:-/var/lib/docker}:ro
     logging: *logging
 

@@ -24,6 +24,8 @@ services:
       - certs:/etc/letsencrypt:ro
       - acme-webroot:/var/www/certbot:ro
       - nginx-served:/usr/share/nginx/served:ro
+    secrets:
+      - registry_htpasswd
     networks:
       - nas-bridge
     logging: *logging
@@ -70,3 +72,7 @@ volumes:
 networks:
   nas-bridge:
     external: true
+# Values come from base/.env; Compose writes them to /run/secrets/NAME.
+secrets:
+  registry_htpasswd:
+    environment: REGISTRY_HTPASSWD

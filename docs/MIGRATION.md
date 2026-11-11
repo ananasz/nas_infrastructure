@@ -34,7 +34,7 @@ sudo bash migration/01-secrets-to-env.sh
 
 A titkok a `/opt/compose/auth/.env` és `/opt/compose/cetli/.env` fájlba kerülnek
 (a cetli meglévő `.env`-je is átjön). A fájlvégi egy sortörés elmarad.
-A `/opt/compose/monitoring/.env` és `/opt/compose/immich/.env` kézzel készül a minta alapján.
+A `/opt/compose/base/.env` ([registry-belépés](DEPLOYMENT.md#registry-belépés)), `monitoring/.env` és `immich/.env` kézzel készül a minta alapján.
 Ellenőrzés stackenként: `docker compose config --quiet`.
 
 ## 2. Leállás és adatmásolás

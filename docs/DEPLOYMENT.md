@@ -59,6 +59,30 @@ A `latest` image-ek frissítése verzióváltás is lehet; nagyobb frissítés e
 Az Immich főverzió-váltásánál az `immich/compose.yml` fájlt is össze kell vetni a kiadás hivatalos
 `docker-compose.yml`-jével (DB- és Valkey-image, kötelező beállítások).
 
+## Registry-belépés
+
+A `docker.ananasz.hu` csak privát IP-ről és bejelentkezve érhető el (nginx basic auth).
+A hash elkészítése bárhol, ahol van Docker (a jelszót bekéri):
+
+```sh
+docker run --rm -it httpd:2.4-alpine htpasswd -nB USER
+```
+
+A kimenetet egy sorban, aposztrófok közé a NAS `/opt/compose/base/.env` fájljába
+(`REGISTRY_HTPASSWD='USER:$2y$05$...'`, `0600`), majd a `/opt/compose/base` könyvtárból:
+
+```sh
+docker compose up -d nginx
+```
+
+Belépés a fejlesztői gépen és a NAS-on is (a NAS a cetli image-ek letöltéséhez):
+
+```sh
+docker login docker.ananasz.hu
+```
+
+A registry UI (`http://docker.nas`) és a retention job a belső hálón, nginx nélkül éri el a registryt.
+
 ## Alkalmazásdeploy (cetli)
 
 Fejlesztői gépen, LAN-ról vagy WireGuardon keresztül:
