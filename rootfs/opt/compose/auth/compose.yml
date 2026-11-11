@@ -26,6 +26,7 @@ services:
       - authelia_oidc_hmac_secret
       - authelia_oidc_jwks_private_key
       - authelia_cetli_client_secret_hash
+      - authelia_anachronos_client_secret_hash
     networks:
       - nas-bridge
     logging: *logging
@@ -45,6 +46,8 @@ secrets:
     environment: OIDC_JWKS_PRIVATE_KEY
   authelia_cetli_client_secret_hash:
     environment: CETLI_CLIENT_SECRET_HASH
+  authelia_anachronos_client_secret_hash:
+    environment: ANACHRONOS_CLIENT_SECRET_HASH
 volumes:
   authelia-data:
     external: true

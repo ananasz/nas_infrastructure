@@ -25,8 +25,9 @@ Minden stack a közös, külső `nas-bridge` hálózaton éri el az nginxet.
 | `monitoring` | Grafana, Loki, VictoriaMetrics, Alloy, cAdvisor, smartctl-exporter | `http://grafana.nas` |
 | `immich` | Immich (server, ML, Postgres, Valkey) | `https://photos.ananasz.hu` |
 | `cetli` | CouchDB, backend, frontend | `https://cetli.ananasz.hu`, `https://api.cetli.ananasz.hu` |
+| `anachronos` | Postgres, backend, web | `https://chrono.ananasz.hu` |
 
-A `*.nas` vhostok és a `qb.ananasz.hu`, `docker.ananasz.hu` csak privát IP-ről
+A `*.nas` vhostok, a `*-db.nas:5432` DB-elérés és a `qb.ananasz.hu`, `docker.ananasz.hu` csak privát IP-ről
 (LAN, WireGuard) érhetők el: `base/configs/snippets/lan-allow.conf`.
 
 ## Leírások

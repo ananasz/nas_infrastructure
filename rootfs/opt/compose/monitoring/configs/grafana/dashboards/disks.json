@@ -736,7 +736,7 @@
       "id": 6
     },
     {
-      "type": "bargauge",
+      "type": "table",
       "title": "Fájlrendszerek foglaltsága",
       "gridPos": {
         "x": 8,
@@ -748,6 +748,8 @@
         "type": "prometheus",
         "uid": "nas-metrics"
       },
+      "id": 7,
+      "description": "Mint a df: Foglaltság = foglalt / (foglalt + szabad). ZFS-datasetnél a méret a foglalt rész és a poolban még szabad hely összege.",
       "targets": [
         {
           "datasource": {
@@ -755,51 +757,140 @@
             "uid": "nas-metrics"
           },
           "refId": "A",
-          "expr": "100 * (1 - max by (mountpoint) (node_filesystem_avail_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}) / max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}))",
-          "legendFormat": "{{mountpoint}}",
+          "expr": "max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "B",
+          "expr": "max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}) - max by (mountpoint) (node_filesystem_free_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "C",
+          "expr": "max by (mountpoint) (node_filesystem_avail_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"})",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nas-metrics"
+          },
+          "refId": "D",
+          "expr": "100 * (max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}) - max by (mountpoint) (node_filesystem_free_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"})) / ((max by (mountpoint) (node_filesystem_size_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}) - max by (mountpoint) (node_filesystem_free_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"})) + max by (mountpoint) (node_filesystem_avail_bytes{job=\"node\",fstype!~\"tmpfs|overlay|vfat\"}))",
+          "legendFormat": "",
           "instant": true,
           "range": false,
           "format": "table"
         }
       ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "mountpoint",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true
+            },
+            "renameByName": {
+              "mountpoint": "Csatolási pont",
+              "Value #A": "Méret",
+              "Value #B": "Foglalt",
+              "Value #C": "Szabad",
+              "Value #D": "Foglaltság"
+            }
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+          "unit": "bytes",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Foglaltság"
+            },
+            "properties": [
               {
-                "color": "green",
-                "value": null
+                "id": "unit",
+                "value": "percent"
               },
               {
-                "color": "yellow",
-                "value": 80
+                "id": "min",
+                "value": 0
               },
               {
-                "color": "red",
-                "value": 90
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "gradient"
+                }
               }
             ]
           }
-        },
-        "overrides": []
+        ]
       },
       "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "id": 7
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Csatolási pont"
+          }
+        ]
+      }
     },
     {
       "type": "timeseries",
@@ -881,7 +972,7 @@
           "legendFormat": "",
           "instant": true,
           "range": false,
-          "format": "table"
+          "format": "time_series"
         }
       ],
       "fieldConfig": {

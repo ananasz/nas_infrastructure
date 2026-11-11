@@ -65,3 +65,22 @@ identity_providers:
           - 'authorization_code'
         response_types:
           - 'code'
+      - client_id: 'anachronos-backend'
+        client_name: 'anaChronos'
+        client_secret: {{ secret "/run/secrets/authelia_anachronos_client_secret_hash" | msquote }}
+        public: false
+        authorization_policy: 'one_factor'
+        token_endpoint_auth_method: 'client_secret_post'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://chrono.ananasz.hu/api/auth/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+        grant_types:
+          - 'authorization_code'
+        response_types:
+          - 'code'

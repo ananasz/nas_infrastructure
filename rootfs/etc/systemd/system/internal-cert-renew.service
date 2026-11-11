@@ -1,0 +1,9 @@
+[Unit]
+Description=Renew the self-signed database certificate
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/compose/base
+ExecStart=/usr/local/bin/renew-internal-certificate.sh

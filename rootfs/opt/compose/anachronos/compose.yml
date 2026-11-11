@@ -1,0 +1,96 @@
+# Based on compose.nas.yaml in the anachronos repo; images come from build-docker.bat.
+name: anachronos
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  web:
+    image: docker.ananasz.hu/anachronos-frontend
+    container_name: anachronos-web
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - private
+      - nas-bridge
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  backend:
+    image: docker.ananasz.hu/anachronos-backend
+    container_name: anachronos-backend
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: ${POSTGRES_DB:-anachronos}
+      PGUSER: ${POSTGRES_USER:-anachronos}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN to the public HTTPS origin}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Budapest}
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_ACCESS_GROUPS: ${OIDC_ACCESS_GROUPS:-}
+      OIDC_ADMIN_GROUPS: ${OIDC_ADMIN_GROUPS:-}
+      COOKIE_SECRET: ${COOKIE_SECRET:-}
+      COOKIE_SAME_SITE: lax
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - private
+    init: true
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: postgres:18-alpine
+    container_name: anachronos-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-anachronos}
+      POSTGRES_USER: ${POSTGRES_USER:-anachronos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      # Postgres 18 images keep the data under /var/lib/postgresql/18/docker.
+      - anachronos-postgres:/var/lib/postgresql
+    networks:
+      - private
+      # nginx proxies anachronos-db.nas:5432 here (base/configs/streams.conf).
+      - nas-bridge
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+networks:
+  # The backend reaches Authelia through its public name, so this network needs internet access.
+  private:
+    name: anachronos
+    driver: bridge
+  nas-bridge:
+    external: true
+
+volumes:
+  anachronos-postgres:
+    name: anachronos-postgres

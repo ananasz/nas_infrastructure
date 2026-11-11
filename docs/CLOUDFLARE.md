@@ -7,6 +7,7 @@ a szürke (DNS only) rekordok közvetlenül a NAS publikus IP-jére mutatnak.
 | --- | --- | --- |
 | `auth` | proxied | belépési oldal: WAF, bot- és rate-limit szabályok |
 | `cetli`, `api.cetli` | proxied | kis kérések; a 60 s-os long-poll belefér a 100 s-os Cloudflare-limitbe |
+| `anachronos` | proxied | kis kérések; az SSE 25 s-os heartbeatje belefér a 100 s-os limitbe |
 | `seer` | proxied | sima webes felület |
 | `registry` (Verdaccio) | proxied | kis csomagok; a 100 MB-os feltöltési limit megegyezik az nginx-limittel |
 | `fin` | DNS only | videostreamelés: a Cloudflare feltételei tiltják a nagy videóforgalmat a CDN-en |

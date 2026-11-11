@@ -1,0 +1,17 @@
+# Names of the self-signed database certificate; add new *-db.nas names here and in streams.conf.
+[req]
+prompt = no
+distinguished_name = subject
+x509_extensions = server
+
+[subject]
+CN = anachronos-db.nas
+
+[server]
+basicConstraints = critical,CA:FALSE
+keyUsage = critical,digitalSignature,keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @names
+
+[names]
+DNS.1 = anachronos-db.nas

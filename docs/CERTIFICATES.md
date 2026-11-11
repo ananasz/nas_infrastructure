@@ -36,3 +36,11 @@ A vhost előbb ne hivatkozzon a certre, majd nginx-teszt/reload. A név a listá
 docker compose run --rm --no-deps certbot certificates
 docker compose run --rm --no-deps certbot delete --cert-name CERT_NAME
 ```
+
+## Belső DB-cert
+
+Self-signed cert a [DB-eléréshez](DEPLOYMENT.md#adatbázis-elérés-datagrip), nevei a
+`base/configs/internal-tls.cnf` fájlban. Fájlok: `/opt/compose/base/secrets/db-tls/` (gitignore-olt, `0700`).
+Az `internal-cert-renew.timer` naponta futtatja a `renew-internal-certificate.sh` scriptet:
+30 napon belüli lejáratnál vagy névváltozáskor egyéves certet készít a meglévő kulccsal, majd nginx-teszt/reload.
+Első létrehozás reload nélkül: `sudo renew-internal-certificate.sh --init` a `/opt/compose/base` alól.

@@ -28,7 +28,7 @@ Javasolt: [restic](https://restic.net/) vagy Kopia titkosított, deduplikált t�
 systemd timerrel. A Filen elérése rclone-on vagy a Filen CLI S3/WebDAV-szerverén keresztül
 lehetséges; a pontos módot telepítés előtt ellenőrizni kell.
 
-Mentendő: a Docker volume-ok (DB-knél előtte dump: CouchDB, Vaultwarden SQLite; az Immich naponta
+Mentendő: a Docker volume-ok (DB-knél előtte dump: CouchDB, anaChronos Postgres (`pg_dump`), Vaultwarden SQLite; az Immich naponta
 maga dumpol a `photos/backups` alá),
 `/opt/compose/*/.env`, a ZFS-pool fontos része (fotók; a média jellemzően nem).
 A mentés sikerességét figyelni kell (pl. Grafana-riasztás vagy healthchecks-ping),
@@ -41,7 +41,7 @@ A mentés sikerességét figyelni kell (pl. Grafana-riasztás vagy healthchecks-
   A közösségi blokklisták miatt hasznosabb, mint a fail2ban; ez utóbbi csak publikus SSH esetén kellene.
 - Authelia: a beépített regulation (kitiltás hibás belépések után) alapból aktív;
   2FA (TOTP/WebAuthn) bekapcsolása javasolt.
-- A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, fs.
+- A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, fs.
   Ami nem kell kívülről, kerüljön a `lan-allow.conf` mögé.
 - `unattended-upgrades` a hoston, SSH csak kulccsal és csak LAN/WireGuardról.
 

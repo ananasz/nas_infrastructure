@@ -17,10 +17,15 @@ services:
     ports:
       - 80:80
       - 443:443
+      # Databases over TLS, LAN/WireGuard only (configs/streams.conf).
+      - 5432:5432
     volumes:
       - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs/conf.d:/etc/nginx/conf.d:ro
       - ./configs/snippets:/etc/nginx/snippets:ro
+      - ./configs/streams.conf:/etc/nginx/streams.conf:ro
+      # Generated on the host by renew-internal-certificate.sh.
+      - ./secrets/db-tls:/etc/nginx/db-tls:ro
       - certs:/etc/letsencrypt:ro
       - acme-webroot:/var/www/certbot:ro
       - nginx-served:/usr/share/nginx/served:ro
