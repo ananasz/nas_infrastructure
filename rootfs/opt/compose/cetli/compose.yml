@@ -21,7 +21,7 @@ services:
     logging: *logging
 
   cetli-backend:
-    image: docker.ananasz.hu/cetli-backend:${CETLI_BACKEND_TAG:-latest}
+    image: docker.ananasz.hu/cetli-backend
     container_name: cetli-backend
     environment:
       - COUCHDB_URL=${DB_URL}
@@ -54,7 +54,7 @@ services:
     logging: *logging
 
   cetli-frontend:
-    image: docker.ananasz.hu/cetli-frontend:${CETLI_FRONTEND_TAG:-latest}
+    image: docker.ananasz.hu/cetli-frontend
     container_name: cetli-frontend
     networks:
       - nas-bridge

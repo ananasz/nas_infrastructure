@@ -1,0 +1,11 @@
+[Unit]
+Description=Encrypted NAS backup to Filen
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/nas-backup.sh backup
+TimeoutStartSec=infinity
+UMask=0077

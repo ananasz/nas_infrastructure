@@ -30,7 +30,7 @@ docker compose run --rm --no-deps nginx -t
 docker compose up -d
 ```
 
-Utána tetszőleges sorrendben: `auth`, `media`, `verdaccio`, `registry`, `monitoring`, `immich`, `cetli`, `anachronos`
+Utána tetszőleges sorrendben: `auth`, `media`, `verdaccio`, `registry`, `monitoring`, `immich`, `cetli`, `anachronos`, `vaultwarden`
 (`cd /opt/compose/STACK && docker compose up -d`).
 
 Időzítők:
@@ -102,8 +102,6 @@ docker compose pull
 docker compose up -d
 ```
 
-Visszaálláshoz egyedi taget is érdemes pusholni (pl. git hash), és azt a
-`cetli/.env` `CETLI_BACKEND_TAG` / `CETLI_FRONTEND_TAG` értékében megadni.
 A registry megőrzése: [registry README](../rootfs/opt/compose/registry/README.md).
 
 A frontend image a SPA-t a 80-as porton szolgálja ki, `index.html` fallbackkel,
@@ -117,7 +115,6 @@ a NAS `/etc/hosts` fájljába: `127.0.0.1 docker.ananasz.hu`.
 Az image-eket az anachronos repó `build-docker.bat` szkriptje építi és pusholja
 (`anachronos-backend`, `anachronos-frontend`, `latest` és `yyyyMMdd-HHmm-<rev>` tag).
 A NAS-on a cetlihez hasonlóan `docker compose pull && docker compose up -d` a `/opt/compose/anachronos` alól;
-rögzített verzióhoz `ANACHRONOS_BACKEND_TAG` / `ANACHRONOS_FRONTEND_TAG` az `anachronos/.env`-ben.
 Induláskor a backend maga futtatja az adatbázis-migrációkat.
 
 ### Első telepítés
@@ -148,6 +145,40 @@ Ellenőrzés: `curl -s -o /dev/null -w '%{http_code}\n' https://chrono.ananasz.h
 a `/api/auth/login?returnTo=%2F` → 302 az Authelia felé; utána böngészős belépés.
 
 A `POSTGRES_PASSWORD` csak az első induláskor állítja be a DB-jelszót; később a Postgresben is módosítani kell.
+
+## Vaultwarden
+
+Publikus a mobil- és asztali kliensek miatt; a `/admin` csak LAN-ról/WireGuardról érhető el
+(`base/configs/conf.d/vaultwarden.conf`). Regisztráció kikapcsolva, új fiók csak e-mailes meghívással
+([SMTP](EMAIL.md)).
+
+### Első telepítés
+
+1. DNS-rekord: `vw` (DNS only, [Cloudflare](CLOUDFLARE.md)), majd cert ([új domain](CERTIFICATES.md#új-domain)).
+2. Admin token: a parancs bekéri a választott admin jelszót, és Argon2-hasht ad:
+
+   ```sh
+   docker run --rm -it vaultwarden/server /vaultwarden hash --preset owasp
+   ```
+
+   A `$argon2id$...` érték aposztrófok közé a `vaultwarden/.env` `ADMIN_TOKEN` mezőjébe (`0600`),
+   mellé az [SMTP-felhasználó](EMAIL.md). Az `/admin` felületen a jelszóval lehet belépni.
+3. Indítás és nginx-reload:
+
+   ```sh
+   cd /opt/compose/vaultwarden && docker compose up -d
+   cd /opt/compose/base && docker compose exec nginx nginx -t && docker compose exec nginx nginx -s reload
+   ```
+
+4. LAN-ról `https://vw.ananasz.hu/admin` → Users → Invite User; a meghívott a levélben kapott linkkel regisztrál.
+5. Bitwardenből: a régi trezorban Export vault (`.json`), a Vaultwarden webes felületén Import data.
+   Az attachmenteket az export nem tartalmazza, azokat kézzel kell áttölteni. Utána az exportfájlt töröld.
+   A mobilappban belépéskor a régióválasztóban: Self-hosted, szerver URL `https://vw.ananasz.hu`.
+
+Ellenőrzés: kívülről `https://vw.ananasz.hu/alive` → 200, `https://vw.ananasz.hu/admin` → 403.
+
+Az `/admin` felületen mentett beállítások a volume `config.json` fájljába kerülnek, és felülírják
+a Compose-ban megadott környezeti változókat. Mentés: [backup](BACKUP.md).
 
 ## Adatbázis-elérés (DataGrip)
 

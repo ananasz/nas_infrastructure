@@ -26,6 +26,7 @@ Minden stack a közös, külső `nas-bridge` hálózaton éri el az nginxet.
 | `immich` | Immich (server, ML, Postgres, Valkey) | `https://photos.ananasz.hu` |
 | `cetli` | CouchDB, backend, frontend | `https://cetli.ananasz.hu`, `https://api.cetli.ananasz.hu` |
 | `anachronos` | Postgres, backend, web | `https://chrono.ananasz.hu` |
+| `vaultwarden` | Vaultwarden (SQLite) | `https://vw.ananasz.hu`; `/admin` csak LAN/WG |
 
 A `*.nas` vhostok, a `*-db.nas:5432` DB-elérés és a `qb.ananasz.hu`, `docker.ananasz.hu` csak privát IP-ről
 (LAN, WireGuard) érhetők el: `base/configs/snippets/lan-allow.conf`.
@@ -35,5 +36,6 @@ A `*.nas` vhostok, a `*-db.nas:5432` DB-elérés és a `qb.ananasz.hu`, `docker.
 - [Telepítés, frissítés, alkalmazásdeploy](docs/DEPLOYMENT.md)
 - [Átállás a régi elrendezésről](docs/MIGRATION.md)
 - [Tanúsítványok](docs/CERTIFICATES.md), [Cloudflare DNS/proxy](docs/CLOUDFLARE.md), [registry karbantartás](rootfs/opt/compose/registry/README.md)
+- [Backup](docs/BACKUP.md), [e-mail-küldés (SMTP2GO)](docs/EMAIL.md)
 - [Monitoring](docs/MONITORING.md)
 - [Tervek és javaslatok](docs/PLANS.md)

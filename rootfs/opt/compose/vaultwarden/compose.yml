@@ -1,0 +1,51 @@
+name: vaultwarden
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  vaultwarden:
+    image: vaultwarden/server
+    container_name: vaultwarden
+    environment:
+      DOMAIN: https://vw.ananasz.hu
+      # New accounts only via admin invitation.
+      SIGNUPS_ALLOWED: 'false'
+      ADMIN_TOKEN_FILE: /run/secrets/vaultwarden_admin_token
+      # SMTP2GO (docs/EMAIL.md): invitations, new-device and 2FA e-mails.
+      SMTP_HOST: mail.smtp2go.com
+      SMTP_PORT: '587'
+      SMTP_SECURITY: starttls
+      SMTP_FROM: vaultwarden@ananasz.hu
+      SMTP_FROM_NAME: Vaultwarden
+      SMTP_USERNAME: ${SMTP_USERNAME:?Set SMTP_USERNAME in .env}
+      SMTP_PASSWORD_FILE: /run/secrets/vaultwarden_smtp_password
+      TZ: Europe/Budapest
+    volumes:
+      # SQLite DB, attachments, sends, rsa_key*, config.json (nas-backup.sh copies it).
+      - vaultwarden-data:/data
+    secrets:
+      - vaultwarden_admin_token
+      - vaultwarden_smtp_password
+    networks:
+      - nas-bridge
+    restart: unless-stopped
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  vaultwarden-data:
+    name: vaultwarden-data
+
+networks:
+  nas-bridge:
+    external: true
+
+# Values come from vaultwarden/.env; Compose writes them to /run/secrets/NAME.
+secrets:
+  vaultwarden_admin_token:
+    environment: ADMIN_TOKEN
+  vaultwarden_smtp_password:
+    environment: SMTP_PASSWORD

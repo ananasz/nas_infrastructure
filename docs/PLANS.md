@@ -2,11 +2,6 @@
 
 Ezek még nincsenek megvalósítva; működő konfiguráció nem tartozik hozzájuk.
 
-## Új szolgáltatások
-
-- **Vaultwarden**: saját stack, SQLite volume-mal; admin token a `.env`-ben.
-  Publikus elérésnél a `/admin` csak LAN-ról (`lan-allow.conf`).
-
 ## A NAS költöztetése után
 
 A helyi hálózaton lévő eszközökhöz kötődnek, ezért csak a NAS új helyén érdemesek.
@@ -24,15 +19,9 @@ GPU: az i5-12500 UHD 770 iGPU-ja (QSV/VAAPI, AV1-dekódolás, OpenVINO) a Jellyf
 
 ## Mentés (filen.io)
 
-Javasolt: [restic](https://restic.net/) vagy Kopia titkosított, deduplikált tárolója a Filenen,
-systemd timerrel. A Filen elérése rclone-on vagy a Filen CLI S3/WebDAV-szerverén keresztül
-lehetséges; a pontos módot telepítés előtt ellenőrizni kell.
-
-Mentendő: a Docker volume-ok (DB-knél előtte dump: CouchDB, anaChronos Postgres (`pg_dump`), Vaultwarden SQLite; az Immich naponta
-maga dumpol a `photos/backups` alá),
-`/opt/compose/*/.env`, a ZFS-pool fontos része (fotók; a média jellemzően nem).
-A mentés sikerességét figyelni kell (pl. Grafana-riasztás vagy healthchecks-ping),
-és időnként visszaállítási próba javasolt.
+[Restic + rclone backup](BACKUP.md): Immich (DB + ZFS snapshot),
+anaChronos (pg_dump), Cetli (full CouchDB copy), Vaultwarden (full `/data` copy), daily systemd timer.
+Pending: NAS deployment, Filen credentials, restore verification, monitoring alerts.
 
 ## Biztonság
 
@@ -40,8 +29,8 @@ A mentés sikerességét figyelni kell (pl. Grafana-riasztás vagy healthchecks-
   a `crowdsec-firewall-bouncer` a hoston tilt. Docker-portoknál a `DOCKER-USER` láncot is kezelnie kell.
   A közösségi blokklisták miatt hasznosabb, mint a fail2ban; ez utóbbi csak publikus SSH esetén kellene.
 - Authelia: a beépített regulation (kitiltás hibás belépések után) alapból aktív;
-  2FA (TOTP/WebAuthn) bekapcsolása javasolt.
-- A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, fs.
+  2FA (TOTP/WebAuthn) bekapcsolása javasolt; a regisztrációhoz szükséges e-mailes kód már működik ([SMTP](EMAIL.md)).
+- A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, Vaultwarden, fs.
   Ami nem kell kívülről, kerüljön a `lan-allow.conf` mögé.
 - `unattended-upgrades` a hoston, SSH csak kulccsal és csak LAN/WireGuardról.
 
@@ -72,7 +61,7 @@ a védett felületek `*.ananasz.hu` nevet kapnak. Adminfelületekhez `two_factor
 
 ## Riasztások
 
-Grafana alerting értesítési csatornával (pl. saját ntfy, Telegram vagy e-mail):
+Grafana alerting szabályok; az e-mailes értesítési csatorna kész ([monitoring](MONITORING.md)):
 SMART-hiba vagy növekvő hibás szektorszám, lemezhőmérséklet, ZFS pool nem `online`,
 fájlrendszer 90% fölött, `up == 0`, sikertelen cert-megújítás vagy mentés.
 

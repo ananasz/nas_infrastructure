@@ -41,4 +41,5 @@ Ha a HDD-k elalvását (spindown) használod, a lekérdezés felébresztheti ők
 ilyenkor az exporter verziójának megfelelő power-mode beállítást vagy ritkább gyűjtést kell beállítani.
 Időzített SMART self-test (pl. `smartd` a hoston) ettől független, javasolt.
 
-Riasztás még nincs; javaslat: [tervek](PLANS.md#riasztások).
+Riasztási szabály még nincs; javaslat: [tervek](PLANS.md#riasztások). Az értesítési csatorna kész:
+minden riasztás e-mailben az `ALERT_EMAIL` címre megy (`configs/grafana/provisioning/alerting/`, [SMTP](EMAIL.md)).

@@ -15,9 +15,11 @@ services:
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_oidc_hmac_secret
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${SMTP_USERNAME:?Set SMTP_USERNAME in .env}
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/authelia_smtp_password
     volumes:
       - ./configs/configuration.yml:/config/configuration.yml:ro
-      # SQLite DB, notifications and users_database.yml (password changes write it).
+      # SQLite DB and users_database.yml (password changes write it).
       - authelia-data:/data
     secrets:
       - authelia_jwt_secret
@@ -27,6 +29,7 @@ services:
       - authelia_oidc_jwks_private_key
       - authelia_cetli_client_secret_hash
       - authelia_anachronos_client_secret_hash
+      - authelia_smtp_password
     networks:
       - nas-bridge
     logging: *logging
@@ -48,6 +51,8 @@ secrets:
     environment: CETLI_CLIENT_SECRET_HASH
   authelia_anachronos_client_secret_hash:
     environment: ANACHRONOS_CLIENT_SECRET_HASH
+  authelia_smtp_password:
+    environment: SMTP_PASSWORD
 volumes:
   authelia-data:
     external: true

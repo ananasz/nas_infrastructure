@@ -36,9 +36,13 @@ storage:
   local:
     path: '/data/db.sqlite3'
 
+# Password reset and 2FA registration codes. Username/password: auth/compose.yml.
 notifier:
-  filesystem:
-    filename: '/data/notification.txt'
+  # An SMTP2GO outage at restart must not take down every login.
+  disable_startup_check: true
+  smtp:
+    address: 'submission://mail.smtp2go.com:587'
+    sender: 'Authelia <auth@ananasz.hu>'
 
 identity_providers:
   oidc:

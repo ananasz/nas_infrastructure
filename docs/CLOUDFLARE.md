@@ -12,6 +12,7 @@ a szürke (DNS only) rekordok közvetlenül a NAS publikus IP-jére mutatnak.
 | `registry` (Verdaccio) | proxied | kis csomagok; a 100 MB-os feltöltési limit megegyezik az nginx-limittel |
 | `fin` | DNS only | videostreamelés: a Cloudflare feltételei tiltják a nagy videóforgalmat a CDN-en |
 | `photos` | DNS only | ingyenes csomagban 100 MB a kérésméret-limit, a videók feltöltése elakadna |
+| `vw` | DNS only | a `/admin` csak privát IP-ről érhető el, ami proxyn át nem teljesülne; nincs 100 MB-os attachmentlimit |
 | `fs` | DNS only | nagy letöltések; csak kis fájloknál érdemes proxyzni |
 | `docker` | DNS only | csak privát IP-ről érhető el (`lan-allow.conf`), a rétegek 100 MB fölöttiek |
 | `qb` | DNS only | csak privát IP-ről érhető el; a rekord törölhető is, a `qb.nas` megmarad |
