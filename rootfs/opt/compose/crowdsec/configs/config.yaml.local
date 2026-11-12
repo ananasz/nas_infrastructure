@@ -1,0 +1,7 @@
+# Merged over the image's /etc/crowdsec/config.yaml.
+prometheus:
+  enabled: true
+  level: full
+  # Inside the container; compose.yml publishes it on the host loopback only.
+  listen_addr: 0.0.0.0
+  listen_port: 6060

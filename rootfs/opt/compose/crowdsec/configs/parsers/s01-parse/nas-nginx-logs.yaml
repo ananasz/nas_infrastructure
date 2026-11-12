@@ -1,0 +1,45 @@
+# nginx JSON access log (base/configs/nginx.conf, log_format main).
+# Sets the same Parsed/Meta fields as crowdsecurity/nginx-logs, so crowdsecurity/http-logs
+# and the HTTP scenarios work unchanged. Non-JSON lines (error log) are skipped.
+# $uri has no query string: scenarios that inspect arguments (SQLi/XSS probing) see nothing.
+onsuccess: next_stage
+filter: "evt.Parsed.program == 'nas-nginx' && evt.Parsed.message startsWith '{'"
+name: nas/nginx-json-logs
+description: "Parse the NAS nginx JSON access log"
+statics:
+  - parsed: remote_addr
+    expression: JsonExtract(evt.Parsed.message, "ip")
+  - parsed: target_fqdn
+    expression: JsonExtract(evt.Parsed.message, "host")
+  - parsed: verb
+    expression: JsonExtract(evt.Parsed.message, "method")
+  - parsed: request
+    expression: JsonExtract(evt.Parsed.message, "uri")
+  - parsed: status
+    expression: JsonExtract(evt.Parsed.message, "status")
+  - parsed: body_bytes_sent
+    expression: JsonExtract(evt.Parsed.message, "bytes_sent")
+  - parsed: http_user_agent
+    expression: JsonExtract(evt.Parsed.message, "agent")
+  - parsed: request_time
+    expression: JsonExtract(evt.Parsed.message, "request_time")
+  - parsed: time_iso8601
+    expression: JsonExtract(evt.Parsed.message, "time")
+  - target: evt.StrTime
+    expression: JsonExtract(evt.Parsed.message, "time")
+  - meta: log_type
+    value: http_access-log
+  - meta: service
+    value: http
+  - meta: source_ip
+    expression: JsonExtract(evt.Parsed.message, "ip")
+  - meta: target_fqdn
+    expression: JsonExtract(evt.Parsed.message, "host")
+  - meta: http_verb
+    expression: JsonExtract(evt.Parsed.message, "method")
+  - meta: http_path
+    expression: JsonExtract(evt.Parsed.message, "uri")
+  - meta: http_status
+    expression: JsonExtract(evt.Parsed.message, "status")
+  - meta: http_user_agent
+    expression: JsonExtract(evt.Parsed.message, "agent")

@@ -1,0 +1,6 @@
+# Failed logins (LePresidente/authelia); the parser reads both text and JSON format.
+source: docker
+container_name:
+  - authelia
+labels:
+  type: authelia

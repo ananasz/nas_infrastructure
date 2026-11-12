@@ -30,8 +30,8 @@ docker compose run --rm --no-deps nginx -t
 docker compose up -d
 ```
 
-Utána tetszőleges sorrendben: `auth`, `media`, `verdaccio`, `registry`, `monitoring`, `immich`, `cetli`, `anachronos`, `vaultwarden`
-(`cd /opt/compose/STACK && docker compose up -d`).
+Utána tetszőleges sorrendben: `auth`, `media`, `verdaccio`, `registry`, `monitoring`, `immich`, `cetli`, `anachronos`, `vaultwarden`, `crowdsec`
+(`cd /opt/compose/STACK && docker compose up -d`). A CrowdSec host-oldali bouncere külön lépés: [CrowdSec](SECURITY.md#telepítés).
 
 Időzítők:
 

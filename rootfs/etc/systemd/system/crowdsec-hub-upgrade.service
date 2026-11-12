@@ -1,0 +1,11 @@
+[Unit]
+Description=Update CrowdSec hub items (parsers, scenarios, data files)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+# Local items (nas/*) are not touched; the restart loads the new versions, decisions stay in SQLite.
+ExecStart=/usr/bin/docker exec crowdsec cscli hub update
+ExecStart=/usr/bin/docker exec crowdsec cscli hub upgrade
+ExecStart=/usr/bin/docker restart crowdsec

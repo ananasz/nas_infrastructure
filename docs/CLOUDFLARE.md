@@ -29,5 +29,6 @@ Beállítások a Cloudflare-en:
 
 Az nginx a proxied kéréseknél a `CF-Connecting-IP` fejlécből veszi a kliens címét
 (`base/configs/snippets/cloudflare-real-ip.conf`), csak a Cloudflare tartományaiból érkező kapcsolatnál.
-Így a logokban, az Autheliában és a későbbi CrowdSecben a valódi kliens-IP látszik.
+Így a logokban, az Autheliában és a [CrowdSecben](SECURITY.md) a valódi kliens-IP látszik.
+A CrowdSec tiltása a hoston történik, ezért a proxied neveken nem hat; ott a Cloudflare WAF-szabályai védenek.
 A Cloudflare IP-listája ritkán változik; forrás a snippet fejlécében.

@@ -1,0 +1,30 @@
+# Merged over the package's crowdsec-firewall-bouncer.yaml; api_key stays in that file (docs/SECURITY.md).
+mode: nftables
+api_url: http://127.0.0.1:8080/
+update_frequency: 10s
+deny_action: DROP
+supported_decisions_types:
+  - ban
+# input: connections to the host itself; forward: Docker published ports (80/443, 5432, qBittorrent),
+# which are DNAT-ed to containers and never pass the input hook.
+nftables_hooks:
+  - input
+  - forward
+nftables:
+  ipv4:
+    enabled: true
+    set-only: false
+    table: crowdsec
+    chain: crowdsec-chain
+    priority: -10
+  ipv6:
+    enabled: true
+    set-only: false
+    table: crowdsec6
+    chain: crowdsec6-chain
+    priority: -10
+# Scraped by Alloy (monitoring/configs/alloy.alloy).
+prometheus:
+  enabled: true
+  listen_addr: 127.0.0.1
+  listen_port: 60601

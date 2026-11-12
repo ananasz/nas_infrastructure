@@ -22,6 +22,8 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME:?Set SMTP_USERNAME in .env}
       SMTP_PASSWORD_FILE: /run/secrets/vaultwarden_smtp_password
       TZ: Europe/Budapest
+      # CrowdSec's Vaultwarden parser needs the UTC offset (docs/SECURITY.md).
+      LOG_TIMESTAMP_FORMAT: '%Y-%m-%d %H:%M:%S.%3f%z'
     volumes:
       # SQLite DB, attachments, sends, rsa_key*, config.json (nas-backup.sh copies it).
       - vaultwarden-data:/data

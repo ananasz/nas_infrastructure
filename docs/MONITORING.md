@@ -9,6 +9,7 @@ A `monitoring` stack mindent helyben gyűjt és tárol. Grafana: `http://grafana
 | Host: CPU, RAM, hálózat, lemez I/O, fájlrendszerek, ZFS, hwmon | Alloy (node exporter) | VictoriaMetrics |
 | Konténer CPU/RAM/hálózat/I/O | cAdvisor | VictoriaMetrics |
 | Lemezek SMART-adatai | smartctl-exporter | VictoriaMetrics |
+| [CrowdSec](SECURITY.md) és firewall bouncer | Alloy (`127.0.0.1:6060`, `:60601`) | VictoriaMetrics |
 
 A metrikák megőrzése a `.env` `METRICS_RETENTION` értéke (alapból 180 nap).
 A Glances helyett a node exporter és a cAdvisor adja ugyanezt Grafanában.
@@ -18,7 +19,8 @@ Dashboardok (`configs/grafana/dashboards/`, a Grafana 30 másodpercenként beolv
 - **Metrics**: host CPU, RAM, swap, load, hálózat, rendszerlemez, konténer-összesítők;
 - **Container STATS**: konténerenkénti erőforrás-táblázat;
 - **Disks**: SMART-állapot, hőmérséklet, hibás szektorok, NVMe-kopás, ZFS pool állapot, fájlrendszerek, lemez I/O;
-- **Container LOGS**: logkereső projekt/konténer/szöveg szerint.
+- **Container LOGS**: logkereső projekt/konténer/szöveg szerint;
+- **CrowdSec**: CrowdSec és bouncer állapota, aktív tiltások forrás szerint, észlelések scenario szerint, logfeldolgozás.
 
 A UI-ban módosított provisionált dashboardot Save as-szel mentsd, vagy a JSON-t szerkeszd a repóban.
 Egy konténer logja a `logging.collect: "false"` címkével zárható ki.

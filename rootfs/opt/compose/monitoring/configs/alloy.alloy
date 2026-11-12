@@ -146,6 +146,30 @@ prometheus.scrape "smart" {
   forward_to      = [prometheus.remote_write.local.receiver]
 }
 
+// ---- CrowdSec (crowdsec stack) and the host firewall bouncer ----
+
+prometheus.scrape "crowdsec" {
+  targets = [{
+    __address__ = "127.0.0.1:6060",
+    instance    = sys.env("ALLOY_HOST"),
+  }]
+  job_name        = "crowdsec"
+  scrape_interval = "60s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.local.receiver]
+}
+
+prometheus.scrape "crowdsec_firewall_bouncer" {
+  targets = [{
+    __address__ = "127.0.0.1:60601",
+    instance    = sys.env("ALLOY_HOST"),
+  }]
+  job_name        = "crowdsec-firewall-bouncer"
+  scrape_interval = "60s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.local.receiver]
+}
+
 prometheus.remote_write "local" {
   external_labels = { host = sys.env("ALLOY_HOST") }
 

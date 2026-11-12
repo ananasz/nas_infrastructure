@@ -1,0 +1,10 @@
+[Unit]
+Description=Update CrowdSec hub items weekly
+
+[Timer]
+OnCalendar=Mon *-*-* 05:00:00
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

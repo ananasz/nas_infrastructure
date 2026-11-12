@@ -25,9 +25,10 @@ Pending: NAS deployment, Filen credentials, restore verification, monitoring ale
 
 ## Biztonság
 
-- **CrowdSec** (fail2ban helyett/mellett): az nginx-logot a Docker-logokból olvassa,
-  a `crowdsec-firewall-bouncer` a hoston tilt. Docker-portoknál a `DOCKER-USER` láncot is kezelnie kell.
-  A közösségi blokklisták miatt hasznosabb, mint a fail2ban; ez utóbbi csak publikus SSH esetén kellene.
+- [CrowdSec](SECURITY.md): konfiguráció kész (`crowdsec` stack, host firewall bouncer, Grafana-dashboard).
+  Pending: NAS deployment, a helyi nginx-parser élő ellenőrzése (`cscli explain`), opcionális Console-regisztráció.
+  Későbbi bővítés: Jellyfin- és Immich-collection; Cloudflare Worker bouncer a proxied nevekre, ha a WAF kevés.
+  Fail2ban nem kell (csak publikus SSH esetén lenne értelme).
 - Authelia: a beépített regulation (kitiltás hibás belépések után) alapból aktív;
   2FA (TOTP/WebAuthn) bekapcsolása javasolt; a regisztrációhoz szükséges e-mailes kód már működik ([SMTP](EMAIL.md)).
 - A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, Vaultwarden, fs.
@@ -63,7 +64,8 @@ a védett felületek `*.ananasz.hu` nevet kapnak. Adminfelületekhez `two_factor
 
 Grafana alerting szabályok; az e-mailes értesítési csatorna kész ([monitoring](MONITORING.md)):
 SMART-hiba vagy növekvő hibás szektorszám, lemezhőmérséklet, ZFS pool nem `online`,
-fájlrendszer 90% fölött, `up == 0`, sikertelen cert-megújítás vagy mentés.
+fájlrendszer 90% fölött, `up == 0` (benne a `crowdsec` és `crowdsec-firewall-bouncer` job),
+sikertelen cert-megújítás vagy mentés.
 
 ## További ötletek
 
@@ -85,3 +87,11 @@ ansible-vaultból, `community.docker.docker_compose_v2` a stackekhez, handlerrel
 | Semaphore UI konténerben | Webes futtatás, ütemezés, napló | Még egy szolgáltatás |
 
 Javaslat: első lépésként kézi futtatás a fejlesztői gépről; ha automatizmus kell, `ansible-pull` timer.
+
+## Jellyseerr
+
+Jellyseerr is deprecated
+
+Jellyseerr was deprecated on February 14, 2026 with the release of Seerr, the upgrade to Jellyseerr. It is no longer maintained and no longer receives bug fixes or security updates. Jellyfin login will fail on newer Jellyfin versions because Jellyseerr uses a deprecated authentication method. Please upgrade to Seerr.
+
+https://docs.seerr.dev/migration-guide/

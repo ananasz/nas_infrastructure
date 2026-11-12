@@ -1,0 +1,7 @@
+# Failed logins, admin and 2FA attempts (Dominic-Wagner/vaultwarden).
+# Needs LOG_TIMESTAMP_FORMAT with a UTC offset (vaultwarden/compose.yml).
+source: docker
+container_name:
+  - vaultwarden
+labels:
+  type: Vaultwarden

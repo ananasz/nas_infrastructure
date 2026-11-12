@@ -1,0 +1,7 @@
+# JSON access log (base/configs/nginx.conf, log_format main) and the error log.
+# The type selects the local parser parsers/s01-parse/nas-nginx-logs.yaml, not crowdsecurity/nginx-logs.
+source: docker
+container_name:
+  - nginx
+labels:
+  type: nas-nginx

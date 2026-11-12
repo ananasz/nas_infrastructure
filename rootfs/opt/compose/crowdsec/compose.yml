@@ -1,0 +1,52 @@
+name: crowdsec
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+services:
+  # Log processor and local API; the firewall bouncer runs on the host (docs/SECURITY.md).
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.8.2
+    container_name: crowdsec
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Budapest
+      # Hub collections, installed at startup if missing; the local parser and whitelist are in configs/.
+      COLLECTIONS: >-
+        crowdsecurity/linux
+        crowdsecurity/nginx
+        crowdsecurity/base-http-scenarios
+        crowdsecurity/http-cve
+        crowdsecurity/whitelist-good-actors
+        LePresidente/authelia
+        Dominic-Wagner/vaultwarden
+      # Registers the host bouncer with this key; changing it needs "cscli bouncers delete firewall".
+      BOUNCER_KEY_firewall: ${BOUNCER_KEY_FIREWALL:?Set BOUNCER_KEY_FIREWALL in .env}
+      # Optional CrowdSec Console enrollment (app.crowdsec.net); empty means not enrolled.
+      ENROLL_KEY: ${ENROLL_KEY:-}
+      ENROLL_INSTANCE_NAME: nas
+    # Only the host reaches these: the firewall bouncer (LAPI) and Alloy (metrics).
+    ports:
+      - 127.0.0.1:8080:8080
+      - 127.0.0.1:6060:6060
+    volumes:
+      # Reads container logs through the Docker API (configs/acquis.d).
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./configs/acquis.d:/etc/crowdsec/acquis.d:ro
+      - ./configs/config.yaml.local:/etc/crowdsec/config.yaml.local:ro
+      - ./configs/parsers/s01-parse/nas-nginx-logs.yaml:/etc/crowdsec/parsers/s01-parse/nas-nginx-logs.yaml:ro
+      - ./configs/parsers/s02-enrich/nas-whitelist.yaml:/etc/crowdsec/parsers/s02-enrich/nas-whitelist.yaml:ro
+      # Hub items, credentials, local config.
+      - crowdsec-config:/etc/crowdsec
+      # SQLite DB (alerts, decisions); required since 1.7.
+      - crowdsec-data:/var/lib/crowdsec/data
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  crowdsec-config:
+    name: crowdsec-config
+  crowdsec-data:
+    name: crowdsec-data
