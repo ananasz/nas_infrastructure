@@ -19,7 +19,7 @@ Minden stack a közös, külső `nas-bridge` hálózaton éri el az nginxet.
 | --- | --- | --- |
 | `base` | nginx, certbot, Portainer | `http://portainer.nas` |
 | `auth` | Authelia | `https://auth.ananasz.hu` |
-| `media` | Jellyfin, Sonarr, Radarr, Bazarr, Prowlarr, qBittorrent, Jellyseerr | `fin`, `seer` publikus; `*.nas` |
+| `media` | Jellyfin, Sonarr, Radarr, Bazarr, Prowlarr, qBittorrent, Seerr | `fin`, `seer` publikus; `*.nas` |
 | `verdaccio` | npm registry | `https://registry.ananasz.hu` |
 | `registry` | Docker registry + UI | `https://docker.ananasz.hu` (LAN/WG), `http://docker.nas` |
 | `monitoring` | Grafana, Loki, VictoriaMetrics, Alloy, cAdvisor, smartctl-exporter | `http://grafana.nas` |

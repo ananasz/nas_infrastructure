@@ -36,7 +36,7 @@ Utána tetszőleges sorrendben: `auth`, `media`, `verdaccio`, `registry`, `monit
 Időzítők:
 
 ```sh
-sudo systemctl enable --now cert-renew.timer registry-retention.timer registry-gc.timer docker-image-prune.timer internal-cert-renew.timer
+sudo systemctl enable --now cert-renew.timer registry-retention.timer registry-gc.timer docker-image-prune.timer internal-cert-renew.timer crowdsec-hub-upgrade.timer
 ```
 
 ## Frissítés

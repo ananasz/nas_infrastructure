@@ -84,17 +84,28 @@ services:
       - PGID=1001
     volumes:
       - prowlarr-config:/config
-  jellyseerr:
-    <<: *linuxserver
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     environment:
-      - PUID=1001
-      - PGID=1001
       - TZ=Europe/Budapest
     volumes:
       - jellyseerr-config:/app/config
-      - media:/media
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    networks:
+      - nas-bridge
+    restart: always
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on: [sonarr, radarr]
 volumes:
   jellyfin-config: {external: true, name: jellyfin-config}

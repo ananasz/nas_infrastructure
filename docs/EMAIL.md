@@ -14,7 +14,7 @@ Minden szolgáltatás saját SMTP-felhasználót kap az SMTP2GO **SMTP Users** o
 | Authelia | `auth/.env`, `auth/configs/configuration.yml` | `auth@ananasz.hu` | jelszó-visszaállítás, 2FA-regisztráció kódja |
 | Vaultwarden | `vaultwarden/.env`, `vaultwarden/compose.yml` | `vaultwarden@ananasz.hu` | meghívó, e-mail-ellenőrzés, új eszköz, e-mailes 2FA |
 | Grafana | `monitoring/.env`, `configs/grafana/provisioning/alerting/` | `grafana@ananasz.hu` | riasztások az `ALERT_EMAIL` címre |
-| Jellyseerr | webes felület | `seer@ananasz.hu` | kérések jóváhagyása, elérhetővé vált média |
+| Seerr | webes felület | `seer@ananasz.hu` | kérések jóváhagyása, elérhetővé vált média |
 | Immich | webes felület | `photos@ananasz.hu` | meghívó, albummegosztás |
 
 ## Ellenőrzés
@@ -27,7 +27,7 @@ Minden szolgáltatás saját SMTP-felhasználót kap az SMTP2GO **SMTP Users** o
 
 ## Webes felületen beállítandó
 
-Jellyseerr (`https://seer.ananasz.hu`): Settings → Notifications → Email. Sender Name `Jellyseerr`,
+Seerr (`https://seer.ananasz.hu`): Settings → Notifications → Email. Sender Name `Seerr`,
 Sender Address `seer@ananasz.hu`, SMTP Host/Port a fenti, Encryption Method „Always use STARTTLS”,
 SMTP felhasználó és jelszó; Test, majd a szükséges értesítéstípusok. A felhasználók a saját profiljukban
 adják meg az e-mail-címüket. Settings → General → Application URL: `https://seer.ananasz.hu` (linkek a levélben).

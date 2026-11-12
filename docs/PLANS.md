@@ -31,7 +31,7 @@ Pending: NAS deployment, Filen credentials, restore verification, monitoring ale
   Fail2ban nem kell (csak publikus SSH esetén lenne értelme).
 - Authelia: a beépített regulation (kitiltás hibás belépések után) alapból aktív;
   2FA (TOTP/WebAuthn) bekapcsolása javasolt; a regisztrációhoz szükséges e-mailes kód már működik ([SMTP](EMAIL.md)).
-- A publikusan elérhető felületek: Jellyfin, Jellyseerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, Vaultwarden, fs.
+- A publikusan elérhető felületek: Jellyfin, Seerr, Immich, Authelia, Verdaccio, Cetli, anaChronos, Vaultwarden, fs.
   Ami nem kell kívülről, kerüljön a `lan-allow.conf` mögé.
 - `unattended-upgrades` a hoston, SSH csak kulccsal és csak LAN/WireGuardról.
 
@@ -53,7 +53,7 @@ a védett felületek `*.ananasz.hu` nevet kapnak. Adminfelületekhez `two_factor
 | qBittorrent | forward auth + IP-whitelist a belépés megkerülésére | részben; az *arr-ok a belső hálón kapcsolódnak |
 | Registry UI, Frigate, AdGuard Home | forward auth (Frigate: proxy-fejléc alapú felhasználó) | igen |
 | Portainer CE | OAuth vagy forward auth | nem; a helyi admin megmarad |
-| Jellyseerr | forward auth csak plusz rétegként | nem; Jellyfin-fiókkal lép be |
+| Seerr | forward auth csak plusz rétegként | nem; Jellyfin-fiókkal lép be |
 | Jellyfin | SSO-plugin (csak webes) | nem; a TV-/mobilkliensek saját belépést igényelnek |
 | Vaultwarden | SSO (OIDC) | nem; a master password a titkosítás kulcsa |
 | Home Assistant | csak közösségi integrációval | nem; a mobilapp saját belépést igényel |
@@ -87,11 +87,3 @@ ansible-vaultból, `community.docker.docker_compose_v2` a stackekhez, handlerrel
 | Semaphore UI konténerben | Webes futtatás, ütemezés, napló | Még egy szolgáltatás |
 
 Javaslat: első lépésként kézi futtatás a fejlesztői gépről; ha automatizmus kell, `ansible-pull` timer.
-
-## Jellyseerr
-
-Jellyseerr is deprecated
-
-Jellyseerr was deprecated on February 14, 2026 with the release of Seerr, the upgrade to Jellyseerr. It is no longer maintained and no longer receives bug fixes or security updates. Jellyfin login will fail on newer Jellyfin versions because Jellyseerr uses a deprecated authentication method. Please upgrade to Seerr.
-
-https://docs.seerr.dev/migration-guide/
